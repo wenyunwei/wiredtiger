@@ -31,6 +31,7 @@ from helper import copy_wiredtiger_home
 import unittest, wiredtiger, wttest
 from wtdataset import SimpleDataSet
 from wiredtiger import stat
+from wtscenario import make_scenarios
 
 def timestamp_str(t):
     return '%x' % t
@@ -44,7 +45,9 @@ class test_rollback_to_stable_base(wttest.WiredTigerTestCase):
         cursor = session.open_cursor(uri)
         for i in range(0, nrows):
             session.begin_transaction()
-            cursor[ds.key(i)] = value
+            cursor.set_key(ds.key(i))
+            cursor.set_value(value)
+            cursor.update()
             session.commit_transaction('commit_timestamp=' + timestamp_str(commit_ts))
         cursor.close()
 
@@ -72,17 +75,20 @@ class test_rollback_to_stable_base(wttest.WiredTigerTestCase):
 
 # Test that rollback to stable clears the remove operation.
 class test_rollback_to_stable01(test_rollback_to_stable_base):
-    # Force a small cache.
-    conn_config = 'cache_size=50MB,log=(enabled),statistics=(all)'
+    conn_config = 'log=(enabled),statistics=(all)'
     session_config = 'isolation=snapshot'
+
+    scenarios = make_scenarios([
+        ('col', dict(keyfmt='r', valuefmt='S')),
+        ('row', dict(keyfmt='i', valuefmt='S')),
+    ])
 
     def test_rollback_to_stable(self):
         nrows = 10000
 
         # Create a table without logging.
         uri = "table:rollback_to_stable01"
-        ds = SimpleDataSet(
-            self, uri, 0, key_format="i", value_format="S", config='log=(enabled=false)')
+        ds = SimpleDataSet(self, uri, 0, key_format=self.keyfmt, value_format=self.valuefmt)
         ds.populate()
 
         # Pin oldest and stable to timestamp 1.

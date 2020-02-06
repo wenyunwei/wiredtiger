@@ -265,6 +265,87 @@ err:
 }
 
 /*
+ * __txn_abort_col_ondisk_kv --
+ *     Fix the on-disk col K/V version according to the given timestamp.
+ */
+static int
+__txn_abort_col_ondisk_kv(
+  WT_SESSION_IMPL *session, WT_PAGE *page, WT_COL *rip, wt_timestamp_t rollback_timestamp)
+{
+    WT_CELL *cell;
+    WT_CELL_UNPACK *vpack, _vpack;
+    WT_DECL_RET;
+    WT_INSERT *ins;
+    WT_INSERT_HEAD *ins_head, **ins_headp;
+    WT_ITEM buf;
+    WT_PAGE_MODIFY *mod;
+    WT_UPDATE *upd, **upd_entry;
+    size_t ins_size, upd_size;
+    u_int skipdepth;
+
+    vpack = &_vpack;
+    ins = NULL;
+
+    cell = WT_COL_PTR(page, cip);
+    __wt_cell_unpack(session, page, cell, vpack);
+    if (vpack->start_ts > rollback_timestamp) {
+        /* There are no visible updates in the history store for this key. Remove it. */
+        WT_RET(__wt_update_alloc(session, NULL, &upd, &upd_size, WT_UPDATE_TOMBSTONE));
+        upd->txnid = WT_TXN_NONE;
+        upd->durable_ts = WT_TS_NONE;
+        upd->start_ts = WT_TS_NONE;
+    } else if (vpack->stop_ts != WT_TS_MAX && vpack->stop_ts > rollback_timestamp) {
+        /*
+         * Clear the remove operation from the key by inserting the original on-disk value as a
+         * standard update.
+         */
+        WT_CLEAR(buf);
+
+        /* Take the value from the original page cell. */
+        WT_RET(__wt_page_cell_data_ref(session, page, vpack, &buf));
+
+        WT_RET(__wt_update_alloc(session, &buf, &upd, &upd_size, WT_UPDATE_STANDARD));
+        upd->txnid = vpack->start_txn;
+        upd->durable_ts = vpack->start_ts;
+        upd->start_ts = vpack->start_ts;
+    } else
+        /* Stable version according to the timestamp. */
+        return (0);
+
+    /* If we don't yet have a modify structure, we'll need one. */
+    WT_ERR(__wt_page_modify_init(session, page));
+    mod = page->modify;
+
+    /* Allocate an update array as necessary. */
+    WT_PAGE_ALLOC_AND_SWAP(session, page, mod->mod_col_update, ins_headp, page->entries);
+    ins_headp = &mod->mod_col_update[WT_COL_SLOT(page, cip)];
+
+    /* Allocate the WT_INSERT_HEAD structure as necessary. */
+    WT_PAGE_ALLOC_AND_SWAP(session, page, *ins_headp, ins_head, 1);
+    ins_head = *ins_headp;
+
+    /* Choose a skiplist depth for this insert. */
+    skipdepth = __wt_skip_choose_depth(session);
+
+    /*
+     * Allocate a WT_INSERT/WT_UPDATE pair and transaction ID, and update the cursor to reference it
+     * (the WT_INSERT_HEAD might be allocated, the WT_INSERT was allocated).
+     */
+    WT_ERR(__col_insert_alloc(session, recno, skipdepth, &ins, &ins_size));
+    ins->upd = upd;
+    ins_size += upd_size;
+
+    WT_ERR(
+      __wt_insert_serial(session, page, ins_head, ins_stack, &ins, ins_size, skipdepth, exclusive));
+    WT_STAT_CONN_INCR(session, txn_rollback_upd_aborted);
+    return (0);
+
+err:
+    __wt_free(session, upd);
+    return (ret);
+}
+
+/*
  * __txn_abort_row_ondisk_kv --
  *     Fix the on-disk row K/V version according to the given timestamp.
  */
@@ -329,9 +410,11 @@ __txn_abort_newer_col_var(
     uint32_t i;
 
     /* Review the changes to the original on-page data items */
-    WT_COL_FOREACH (page, cip, i)
+    WT_COL_FOREACH (page, cip, i) {
         if ((ins = WT_COL_UPDATE(page, cip)) != NULL)
             __txn_abort_newer_insert(session, ins, rollback_timestamp);
+        __txn_abort_col_ondisk_kv(session, page, cip, rollback_timestamp);
+    }
 
     /* Review the append list */
     if ((ins = WT_COL_APPEND(page)) != NULL)
