@@ -695,7 +695,23 @@ tasks:
 
   # Start of csuite test tasks
 
-  - name: csuite-import-test
+  # Temporarily disabled
+  # - name: csuite-import-test
+  #   tags: ["pull_request"]
+  #   depends_on:
+  #     - name: compile
+  #   commands:
+  #     - func: "fetch artifacts"
+  #     - command: shell.exec
+  #       params:
+  #         working_dir: "wiredtiger/build_posix"
+  #         script: |
+  #           set -o errexit
+  #           set -o verbose
+
+  #           ${test_env_vars|} $(pwd)/../test/csuite/import/smoke.sh 2>&1
+
+  - name: csuite-incr-backup-test
     tags: ["pull_request"]
     depends_on:
       - name: compile
@@ -708,67 +724,70 @@ tasks:
             set -o errexit
             set -o verbose
 
-            ${test_env_vars|} $(pwd)/../test/csuite/import/smoke.sh 2>&1
+            ${test_env_vars|} $(pwd)/test/csuite/test_incr_backup 2>&1
 
-  - name: csuite-random-abort-test
-    tags: ["pull_request"]
-    depends_on:
-      - name: compile
-    commands:
-      - func: "fetch artifacts"
-      - command: shell.exec
-        params:
-          working_dir: "wiredtiger/build_posix"
-          script: |
-            set -o errexit
-            set -o verbose
+  # Temporarily disabled
+  # - name: csuite-random-abort-test
+  #   tags: ["pull_request"]
+  #   depends_on:
+  #     - name: compile
+  #   commands:
+  #     - func: "fetch artifacts"
+  #     - command: shell.exec
+  #       params:
+  #         working_dir: "wiredtiger/build_posix"
+  #         script: |
+  #           set -o errexit
+  #           set -o verbose
 
-            ${test_env_vars|} $(pwd)/../test/csuite/random_abort/smoke.sh 2>&1
+  #           ${test_env_vars|} $(pwd)/../test/csuite/random_abort/smoke.sh 2>&1
 
-  - name: csuite-random-directio-test
-    tags: ["pull_request"]
-    depends_on:
-      - name: compile
-    commands:
-      - func: "fetch artifacts"
-      - command: shell.exec
-        params:
-          working_dir: "wiredtiger/build_posix"
-          script: |
-            set -o errexit
-            set -o verbose
+  # - name: csuite-random-directio-test
+  #   tags: ["pull_request"]
+  #   depends_on:
+  #     - name: compile
+  #   commands:
+  #     - func: "fetch artifacts"
+  #     - command: shell.exec
+  #       params:
+  #         working_dir: "wiredtiger/build_posix"
+  #         script: |
+  #           set -o errexit
+  #           set -o verbose
 
-            ${test_env_vars|} $(pwd)/../test/csuite/random_directio/smoke.sh 2>&1
+  #           ${test_env_vars|} $(pwd)/../test/csuite/random_directio/smoke.sh 2>&1
 
-  - name: csuite-schema-abort-test
-    tags: ["pull_request"]
-    depends_on:
-      - name: compile
-    commands:
-      - func: "fetch artifacts"
-      - command: shell.exec
-        params:
-          working_dir: "wiredtiger/build_posix"
-          script: |
-            set -o errexit
-            set -o verbose
+  # Temporarily disabled
+  # - name: csuite-schema-abort-test
+  #   tags: ["pull_request"]
+  #   depends_on:
+  #     - name: compile
+  #   commands:
+  #     - func: "fetch artifacts"
+  #     - command: shell.exec
+  #       params:
+  #         working_dir: "wiredtiger/build_posix"
+  #         script: |
+  #           set -o errexit
+  #           set -o verbose
 
-            ${test_env_vars|} $(pwd)/../test/csuite/schema_abort/smoke.sh 2>&1
+  #           ${test_env_vars|} $(pwd)/../test/csuite/schema_abort/smoke.sh 2>&1
 
-  - name: csuite-timestamp-abort-test
-    tags: ["pull_request"]
-    depends_on:
-      - name: compile
-    commands:
-      - func: "fetch artifacts"
-      - command: shell.exec
-        params:
-          working_dir: "wiredtiger/build_posix"
-          script: |
-            set -o errexit
-            set -o verbose
+  # Temporarily disabled
+  # - name: csuite-timestamp-abort-test
+  #   tags: ["pull_request"]
+  #   depends_on:
+  #     - name: compile
+  #   commands:
+  #     - func: "fetch artifacts"
+  #     - command: shell.exec
+  #       params:
+  #         working_dir: "wiredtiger/build_posix"
+  #         script: |
+  #           set -o errexit
+  #           set -o verbose
 
-            ${test_env_vars|} $(pwd)/../test/csuite/timestamp_abort/smoke.sh 2>&1
+  #           ${test_env_vars|} $(pwd)/../test/csuite/timestamp_abort/smoke.sh 2>&1
 
   - name: csuite-scope-test
     tags: ["pull_request"]
