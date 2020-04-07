@@ -890,6 +890,7 @@ __btree_page_sizes(WT_SESSION_IMPL *session)
           session->dhandle->name, WT_BTREE_MIN_SPLIT_PCT));
     } else
         btree->split_pct = (int)cval.val;
+    btree->split_pct = 90;
     intl_split_size = __wt_split_page_size(btree->split_pct, btree->maxintlpage, btree->allocsize);
     leaf_split_size = __wt_split_page_size(btree->split_pct, btree->maxleafpage, btree->allocsize);
 
