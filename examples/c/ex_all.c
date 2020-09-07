@@ -688,7 +688,7 @@ session_ops(WT_SESSION *session)
 
 #ifdef MIGHT_NOT_RUN
         /*! [Import a file] */
-        error_check(session->import(session, "file:import", NULL));
+        error_check(session->live_import(session, "file:import", NULL));
 /*! [Import a file] */
 #endif
 

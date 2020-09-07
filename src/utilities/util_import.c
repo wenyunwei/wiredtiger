@@ -38,8 +38,8 @@ util_import(WT_SESSION *session, int argc, char *argv[])
     if ((uri = util_uri(session, *argv, "file")) == NULL)
         return (1);
 
-    if ((ret = session->import(session, uri, NULL)) != 0)
-        (void)util_err(session, ret, "WT_SESSION.import: %s", uri);
+    if ((ret = session->live_import(session, uri, NULL)) != 0)
+        (void)util_err(session, ret, "WT_SESSION.live_import: %s", uri);
 
     free(uri);
     return (ret);

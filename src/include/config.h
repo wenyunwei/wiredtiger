@@ -76,8 +76,8 @@ struct __wt_config_parser_impl {
 #define WT_CONFIG_ENTRY_WT_SESSION_compact 22
 #define WT_CONFIG_ENTRY_WT_SESSION_create 23
 #define WT_CONFIG_ENTRY_WT_SESSION_drop 24
-#define WT_CONFIG_ENTRY_WT_SESSION_import 25
-#define WT_CONFIG_ENTRY_WT_SESSION_join 26
+#define WT_CONFIG_ENTRY_WT_SESSION_join 25
+#define WT_CONFIG_ENTRY_WT_SESSION_live_import 26
 #define WT_CONFIG_ENTRY_WT_SESSION_log_flush 27
 #define WT_CONFIG_ENTRY_WT_SESSION_log_printf 28
 #define WT_CONFIG_ENTRY_WT_SESSION_open_cursor 29

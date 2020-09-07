@@ -1079,11 +1079,11 @@ err:
 }
 
 /*
- * __session_import --
- *     WT_SESSION->import method.
+ * __session_live_import --
+ *     WT_SESSION->live_import method.
  */
 static int
-__session_import(WT_SESSION *wt_session, const char *uri, const char *config)
+__session_live_import(WT_SESSION *wt_session, const char *uri, const char *config)
 {
     WT_DECL_RET;
     WT_SESSION_IMPL *session;
@@ -1093,8 +1093,9 @@ __session_import(WT_SESSION *wt_session, const char *uri, const char *config)
 
     value = NULL;
 
+    printf("\n__session_live_import uri: \'%s\'\n", uri);
     session = (WT_SESSION_IMPL *)wt_session;
-    SESSION_API_CALL_PREPARE_NOT_ALLOWED_NOCONF(session, import);
+    SESSION_API_CALL_PREPARE_NOT_ALLOWED_NOCONF(session, live_import);
 
     WT_ERR(__wt_inmem_unsupported_op(session, NULL));
 
@@ -1117,11 +1118,11 @@ err:
 }
 
 /*
- * __session_import_readonly --
- *     WT_SESSION->import method; readonly version.
+ * __session_live_import_readonly --
+ *     WT_SESSION->live_import method; readonly version.
  */
 static int
-__session_import_readonly(WT_SESSION *wt_session, const char *uri, const char *config)
+__session_live_import_readonly(WT_SESSION *wt_session, const char *uri, const char *config)
 {
     WT_DECL_RET;
     WT_SESSION_IMPL *session;
@@ -1130,7 +1131,7 @@ __session_import_readonly(WT_SESSION *wt_session, const char *uri, const char *c
     WT_UNUSED(config);
 
     session = (WT_SESSION_IMPL *)wt_session;
-    SESSION_API_CALL_NOCONF(session, import);
+    SESSION_API_CALL_NOCONF(session, live_import);
 
     WT_STAT_CONN_INCR(session, session_table_import_fail);
     ret = __wt_session_notsup(session);
@@ -2032,7 +2033,7 @@ __open_session(WT_CONNECTION_IMPL *conn, WT_EVENT_HANDLER *event_handler, const 
 {
     static const WT_SESSION
       stds = {NULL, NULL, __session_close, __session_reconfigure, __wt_session_strerror,
-        __session_open_cursor, __session_alter, __session_create, __session_import,
+        __session_open_cursor, __session_alter, __session_create, __session_live_import,
         __wt_session_compact, __session_drop, __session_join, __session_log_flush,
         __session_log_printf, __session_rebalance, __session_rename, __session_reset,
         __session_salvage, __session_truncate, __session_upgrade, __session_verify,
@@ -2042,7 +2043,7 @@ __open_session(WT_CONNECTION_IMPL *conn, WT_EVENT_HANDLER *event_handler, const 
         __wt_session_breakpoint},
       stds_readonly = {NULL, NULL, __session_close, __session_reconfigure, __wt_session_strerror,
         __session_open_cursor, __session_alter_readonly, __session_create_readonly,
-        __session_import_readonly, __wt_session_compact_readonly, __session_drop_readonly,
+        __session_live_import_readonly, __wt_session_compact_readonly, __session_drop_readonly,
         __session_join, __session_log_flush_readonly, __session_log_printf_readonly,
         __session_rebalance_readonly, __session_rename_readonly, __session_reset,
         __session_salvage_readonly, __session_truncate_readonly, __session_upgrade_readonly,

@@ -26,6 +26,10 @@ $top_builddir/ext/collators/reverse/.libs/libwiredtiger_reverse_collator.so]"
 
 wt="$top_builddir/wt"
 
+objtype=file
+objo=wt
+obji=$objo-imported
+
 # Run test/format to create an object.
 format()
 {
@@ -38,7 +42,7 @@ format()
 	    -h $rundir \
 	    backups=0 \
 	    checkpoints=1 \
-	    data_source=file \
+	    data_source=$objtype \
 	    ops=0 \
 	    rebalance=0 \
 	    salvage=0 \
@@ -55,21 +59,21 @@ import()
 
 	# Dump the original metadata.
 	echo; echo 'dumping the original metadata'
-	$wt -C "$EXT" -h $rundir list -cv file:wt
-	$wt -C "$EXT" -h $rundir list -v file:wt | sed 1d > $mo
+	$wt -C "$EXT" -h $rundir list -cv $objtype:$objo
+	$wt -C "$EXT" -h $rundir list -v $objtype:$objo | sed 1d > $mo
 
 	# Create a stub datbase and copy in the table.
 	rm -rf $foreign && mkdir $foreign
-	$wt -C "$EXT" -h $foreign create file:xxx
-	cp $rundir/wt $foreign/yyy
+	$wt -C "$EXT" -h $foreign create $objtype:foreign-object
+    cp $rundir/$objo $foreign/$obji
 
 	# Import the table.
-	$wt -C "$EXT" -h $foreign import file:yyy
+	$wt -C "$EXT" -h $foreign import $objtype:$obji
 
 	# Dump the imported metadata.
 	echo; echo 'dumping the imported metadata'
-	$wt -C "$EXT" -h $foreign list -cv file:yyy
-	$wt -C "$EXT" -h $foreign list -v file:yyy | sed 1d > $mi
+	$wt -C "$EXT" -h $foreign list -cv $objtype:$obji
+	$wt -C "$EXT" -h $foreign list -v $objtype:$obji | sed 1d > $mi
 }
 
 compare_checkpoints()
@@ -87,8 +91,8 @@ compare_checkpoints()
 
 verify()
 {
-	echo; echo 'verifying the imported file'
-	$wt -C "$EXT" -h $foreign verify file:yyy && echo 'verify succeeded'
+	echo; echo "verifying the imported $objtype"
+	$wt -C "$EXT" -h $foreign verify $objtype:$obji && echo 'verify succeeded'
 }
 
 # If verify fails, you can repeatedly run the import, checkpoint comparison and

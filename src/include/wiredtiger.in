@@ -1409,7 +1409,6 @@ struct __wt_session {
 	int __F(create)(WT_SESSION *session,
 	    const char *name, const char *config);
 
-#if !defined(SWIG) && !defined(DOXYGEN)
 	/*!
 	 * Import a file.
 	 *
@@ -1417,12 +1416,11 @@ struct __wt_session {
 	 *
 	 * @param session the session handle
 	 * @param name the URI of the object to import
-	 * @configempty{WT_SESSION.import, see dist/api_data.py}
+	 * @configempty{WT_SESSION.live_import, see dist/api_data.py}
 	 * @errors
 	 */
-	int __F(import)(WT_SESSION *session,
+	int __F(live_import)(WT_SESSION *session,
 	    const char *name, const char *config);
-#endif
 
 	/*!
 	 * Compact a live row- or column-store btree or LSM tree.

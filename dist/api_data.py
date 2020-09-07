@@ -1193,7 +1193,7 @@ methods = {
         type='boolean'),
 ]),
 
-'WT_SESSION.import' : Method([]),
+'WT_SESSION.live_import' : Method([]),
 
 'WT_SESSION.join' : Method([
     Config('compare', '"eq"', r'''

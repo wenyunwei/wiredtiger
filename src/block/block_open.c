@@ -375,6 +375,10 @@ __desc_read(WT_SESSION_IMPL *session, uint32_t allocsize, WT_BLOCK *block)
      * file name, and is now frantically pounding their interrupt key.
      */
     if (desc->magic != WT_BLOCK_MAGIC || !checksum_matched) {
+        if (!checksum_matched)
+            printf("FAIL: checksum_matched == false\n");
+        if (desc->magic != WT_BLOCK_MAGIC)
+            printf("FAIL: desc->magic != WT_BLOCK_MAGIC\n");
         if (strcmp(block->name, WT_METAFILE) == 0 || strcmp(block->name, WT_HS_FILE) == 0)
             WT_ERR_MSG(session, WT_TRY_SALVAGE, "%s is corrupted", block->name);
         WT_ERR_MSG(session, WT_ERROR, "%s does not appear to be a WiredTiger file", block->name);
