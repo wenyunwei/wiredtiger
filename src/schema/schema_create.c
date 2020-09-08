@@ -559,9 +559,7 @@ __create_table(WT_SESSION_IMPL *session, const char *uri, bool exclusive, bool i
     table = NULL;
     tableconf = NULL;
 
-#if 1
     WT_ASSERT(session, F_ISSET(session, WT_SESSION_LOCKED_TABLE_WRITE));
-#endif
 
     tablename = uri;
     WT_PREFIX_SKIP_REQUIRED(session, tablename, "table:");
