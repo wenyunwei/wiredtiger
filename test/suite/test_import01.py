@@ -49,7 +49,7 @@ class test_import01(wttest.WiredTigerTestCase):
         # mongodb create params with allocation_size=512B
         create_params_mdb_512 = ('access_pattern_hint=none,allocation_size=512B,app_metadata=,assert=(commit_timestamp=none,durable_timestamp=none,read_timestamp=none),block_allocation=best,block_compressor="zlib",cache_resident=false,checksum="uncompressed",colgroups=,collator=,columns=,dictionary=0,encryption=(keyid=,name=),exclusive=false,extractor=,format=btree,huffman_key=,huffman_value=,ignore_in_memory_cache_size=false,immutable=false,internal_item_max=0,internal_key_max=1607,internal_key_truncate=true,internal_page_max=65536,key_format=u,key_gap=14,leaf_item_max=0,leaf_key_max=98,leaf_page_max=4096,leaf_value_max=40960,log=(enabled=true),memory_page_image_max=0,memory_page_max=4194304,os_cache_dirty_max=0,os_cache_max=0,prefix_compression=false,prefix_compression_min=4,source=,split_deepen_min_child=0,split_deepen_per_child=0,split_pct=86,type=file,value_format=u')
 
-        create_params = create_params_mdb_4K
+        create_params = create_params_mdb_4k
         self.session.create(uri, create_params)
 
         c = self.session.open_cursor(uri)
