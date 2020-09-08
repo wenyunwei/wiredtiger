@@ -684,7 +684,8 @@ __wt_session_create(WT_SESSION_IMPL *session, const char *uri, const char *confi
     WT_DECL_RET;
 
     WT_WITH_SCHEMA_LOCK(
-      session, WT_WITH_TABLE_WRITE_LOCK(session, ret = __wt_schema_create(session, uri, config)));
+      session, WT_WITH_TABLE_WRITE_LOCK(session,
+        ret = __wt_schema_create(session, uri, config, false)));
     return (ret);
 }
 
@@ -1089,24 +1090,21 @@ __session_live_import(WT_SESSION *wt_session, const char *uri, const char *confi
     WT_SESSION_IMPL *session;
     char *value;
 
-    WT_UNUSED(config);
-
     value = NULL;
 
-    printf("\n__session_live_import uri: \'%s\'\n", uri);
+    printf("__session_live_import uri: \'%s\'\n", uri);
     session = (WT_SESSION_IMPL *)wt_session;
     SESSION_API_CALL_PREPARE_NOT_ALLOWED_NOCONF(session, live_import);
 
     WT_ERR(__wt_inmem_unsupported_op(session, NULL));
 
-    if (!WT_PREFIX_MATCH(uri, "file:"))
-        WT_ERR(__wt_bad_object_type(session, uri));
-
     if ((ret = __wt_metadata_search(session, uri, &value)) == 0)
         WT_ERR_MSG(session, EINVAL, "an object named \"%s\" already exists in the database", uri);
     WT_ERR_NOTFOUND_OK(ret, false);
 
-    WT_ERR(__wt_import(session, uri));
+    WT_WITH_SCHEMA_LOCK(
+      session, WT_WITH_TABLE_WRITE_LOCK(session,
+        ret = __wt_schema_create(session, uri, config, true)));
 
 err:
     if (ret != 0)

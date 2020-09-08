@@ -26,8 +26,8 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-# test_import01.py
-# Import a file into a running database.
+# test_import02.py
+# Import a table into a running database.
 
 import os, shutil
 import wiredtiger, wttest
@@ -35,7 +35,7 @@ import wiredtiger, wttest
 def timestamp_str(t):
     return '%x' % t
 
-class test_import01(wttest.WiredTigerTestCase):
+class test_import02(wttest.WiredTigerTestCase):
     conn_config = ('cache_size=50MB,log=(enabled),statistics=(all)')
     session_config = 'isolation=snapshot'
 
@@ -51,19 +51,18 @@ class test_import01(wttest.WiredTigerTestCase):
             "Tmplog" not in file_name and "Preplog" not in file_name:
             shutil.copy(os.path.join(old_dir, file_name), new_dir)
 
-    def test_file_import(self):
-        original_db_file = 'original_db_file'
-        uri = 'file:' + original_db_file
+    def test_table_import(self):
+        original_db_table = 'original_db_table'
+        uri = 'table:' + original_db_table
+        
+        original_db_create_config = ('allocation_size=512,app_metadata=(formatVersion=1),'
+            'block_compressor=snappy,internal_page_max=4KB,key_format=u,leaf_item_max=0,'
+            'leaf_key_max=0,leaf_page_max=32KB,leaf_value_max=64MB,log=(enabled=true),'
+            'memory_page_max=10m,value_format=u,checksum="uncompressed"')
 
-        # mongodb create config
-        create_config_mdb_4k = ('access_pattern_hint=none,allocation_size=4K,app_metadata=,assert=(commit_timestamp=none,durable_timestamp=none,read_timestamp=none),block_allocation=best,block_compressor="zlib",cache_resident=false,checksum="uncompressed",colgroups=,collator=,columns=,dictionary=0,encryption=(keyid=,name=),exclusive=false,extractor=,format=btree,huffman_key=,huffman_value=,ignore_in_memory_cache_size=false,immutable=false,internal_item_max=0,internal_key_max=1607,internal_key_truncate=true,internal_page_max=65536,key_format=u,key_gap=14,leaf_item_max=0,leaf_key_max=98,leaf_page_max=4096,leaf_value_max=40960,log=(enabled=true),memory_page_image_max=0,memory_page_max=4194304,os_cache_dirty_max=0,os_cache_max=0,prefix_compression=false,prefix_compression_min=4,source=,split_deepen_min_child=0,split_deepen_per_child=0,split_pct=86,type=file,value_format=u')
-        # mongodb create config with allocation_size=512B
-        create_config_mdb_512 = ('access_pattern_hint=none,allocation_size=512B,app_metadata=,assert=(commit_timestamp=none,durable_timestamp=none,read_timestamp=none),block_allocation=best,block_compressor="zlib",cache_resident=false,checksum="uncompressed",colgroups=,collator=,columns=,dictionary=0,encryption=(keyid=,name=),exclusive=false,extractor=,format=btree,huffman_key=,huffman_value=,ignore_in_memory_cache_size=false,immutable=false,internal_item_max=0,internal_key_max=1607,internal_key_truncate=true,internal_page_max=65536,key_format=u,key_gap=14,leaf_item_max=0,leaf_key_max=98,leaf_page_max=4096,leaf_value_max=40960,log=(enabled=true),memory_page_image_max=0,memory_page_max=4194304,os_cache_dirty_max=0,os_cache_max=0,prefix_compression=false,prefix_compression_min=4,source=,split_deepen_min_child=0,split_deepen_per_child=0,split_pct=86,type=file,value_format=u')
+        self.session.create(uri, original_db_create_config)
 
-        create_config = create_config_mdb_512
-        self.session.create(uri, create_config)
-
-        # Add some data.
+        # Add data.
         self.update(uri, b'1', b'\x01\x02aaa\x03\x04', 10)
         self.update(uri, b'2', b'\x01\x02bbb\x03\x04', 20)
 
@@ -77,27 +76,38 @@ class test_import01(wttest.WiredTigerTestCase):
         # Perform a checkpoint.
         self.session.checkpoint()
 
+        # Export the metadata for the table.
+        c = self.session.open_cursor('metadata:', None, None)
+        original_db_table_config = c[uri]
+        c.close()
+
         # Close the connection.
         self.close_conn()
 
         # Create a new database and connect to it.
+        import_db_create_config = ('allocation_size=4K,key_format=i,value_format=S')
         newdir = 'IMPORT_DB'
         shutil.rmtree(newdir, ignore_errors=True)
         os.mkdir(newdir)
         self.conn = self.setUpConnectionOpen(newdir)
         self.session = self.setUpSessionOpen(self.conn)
-        self.session.create('table:db_table', create_config)
+        self.session.create('table:import_db_table', import_db_create_config)
 
         # Copy over the datafiles for the object we want to import.
-        self.copy_file(original_db_file, '.', newdir)
+        self.copy_file(original_db_table + '.wt', '.', newdir)
 
-        # Import the file.
-        self.session.live_import(uri)
+        # Import the table.
+        self.session.live_import(uri, original_db_table_config)
 
         # Verify object.
         self.session.verify(uri)
 
-        # Add some data.
+        # Compare metadata.
+        c = self.session.open_cursor('metadata:', None, None)
+        self.assertEqual(original_db_table_config, c[uri])
+        c.close()
+
+        # Open cursor.
         self.update(uri, b'5', b'\x01\x02eee\x03\x04', 50)
         self.update(uri, b'6', b'\x01\x02fff\x03\x04', 60)
 

@@ -299,7 +299,7 @@ __wt_lsm_tree_setup_chunk(WT_SESSION_IMPL *session, WT_LSM_TREE *lsm_tree, WT_LS
     if (chunk->id > 1)
         WT_RET(__lsm_tree_cleanup_old(session, chunk->uri));
 
-    return (__wt_schema_create(session, chunk->uri, lsm_tree->file_config));
+    return (__wt_schema_create(session, chunk->uri, lsm_tree->file_config, false));
 }
 
 /*
