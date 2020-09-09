@@ -56,9 +56,15 @@ class test_import01(wttest.WiredTigerTestCase):
         uri = 'file:' + original_db_file
 
         # mongodb create config
-        create_config_mdb_4k = ('access_pattern_hint=none,allocation_size=4K,app_metadata=,assert=(commit_timestamp=none,durable_timestamp=none,read_timestamp=none),block_allocation=best,block_compressor="zlib",cache_resident=false,checksum="uncompressed",colgroups=,collator=,columns=,dictionary=0,encryption=(keyid=,name=),exclusive=false,extractor=,format=btree,huffman_key=,huffman_value=,ignore_in_memory_cache_size=false,immutable=false,internal_item_max=0,internal_key_max=1607,internal_key_truncate=true,internal_page_max=65536,key_format=u,key_gap=14,leaf_item_max=0,leaf_key_max=98,leaf_page_max=4096,leaf_value_max=40960,log=(enabled=true),memory_page_image_max=0,memory_page_max=4194304,os_cache_dirty_max=0,os_cache_max=0,prefix_compression=false,prefix_compression_min=4,source=,split_deepen_min_child=0,split_deepen_per_child=0,split_pct=86,type=file,value_format=u')
+        create_config_mdb_4k = ('allocation_size=4K,app_metadata=(formatVersion=1),'
+            'block_compressor=snappy,checksum="uncompressed",internal_page_max=4KB,'
+            'key_format=u,leaf_item_max=0,leaf_key_max=0,leaf_page_max=32KB,'
+            'leaf_value_max=64MB,log=(enabled=true),memory_page_max=10m,value_format=u')
         # mongodb create config with allocation_size=512B
-        create_config_mdb_512 = ('access_pattern_hint=none,allocation_size=512B,app_metadata=,assert=(commit_timestamp=none,durable_timestamp=none,read_timestamp=none),block_allocation=best,block_compressor="zlib",cache_resident=false,checksum="uncompressed",colgroups=,collator=,columns=,dictionary=0,encryption=(keyid=,name=),exclusive=false,extractor=,format=btree,huffman_key=,huffman_value=,ignore_in_memory_cache_size=false,immutable=false,internal_item_max=0,internal_key_max=1607,internal_key_truncate=true,internal_page_max=65536,key_format=u,key_gap=14,leaf_item_max=0,leaf_key_max=98,leaf_page_max=4096,leaf_value_max=40960,log=(enabled=true),memory_page_image_max=0,memory_page_max=4194304,os_cache_dirty_max=0,os_cache_max=0,prefix_compression=false,prefix_compression_min=4,source=,split_deepen_min_child=0,split_deepen_per_child=0,split_pct=86,type=file,value_format=u')
+        create_config_mdb_512 = ('allocation_size=512,app_metadata=(formatVersion=1),'
+            'block_compressor=snappy,checksum="uncompressed",internal_page_max=4KB,'
+            'key_format=u,leaf_item_max=0,leaf_key_max=0,leaf_page_max=32KB,'
+            'leaf_value_max=64MB,log=(enabled=true),memory_page_max=10m,value_format=u')
 
         create_config = create_config_mdb_512
         self.session.create(uri, create_config)
